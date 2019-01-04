@@ -25,8 +25,13 @@ const {
   hideContainers,
   moduleDir,
   hideThirdParty,
-} = program.hideContainers;
+} = program;
 
 const filename = path.resolve(program.args[0]);
 
-rch.doIt(filename, { hideContainers, moduleDir, hideThirdParty });
+rch.process(filename, {
+  hideContainers,
+  moduleDir,
+  hideThirdParty,
+  formatted: true,
+});

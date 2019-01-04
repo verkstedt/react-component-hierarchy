@@ -4,7 +4,9 @@ const { readFileSync } = require('fs');
 const tree = require('pretty-tree');
 const path = require('path');
 
-const doIt = (filename, { hideContainers, moduleDir, hideThirdParty }) => {
+const process = (filename, {
+  hideContainers, moduleDir, hideThirdParty, formatted,
+}) => {
   const rootNode = {
     name: path.basename(filename).replace(/\.jsx?/, ''),
     filename,
@@ -215,7 +217,11 @@ const doIt = (filename, { hideContainers, moduleDir, hideThirdParty }) => {
       process.exit(1);
     }
 
-    console.log(tree(formatNodeToPrettyTree(rootNode)));
+    if (formatted) {
+      console.log(tree(formatNodeToPrettyTree(rootNode)));
+    } else {
+      return rootNode;
+    }
     process.exit();
   }
 
@@ -262,7 +268,7 @@ const doIt = (filename, { hideContainers, moduleDir, hideThirdParty }) => {
   }
 
   processNode(rootNode, 1);
-  done();
+  return done();
 };
 
-module.exports = { doIt };
+module.exports = { process };
