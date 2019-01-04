@@ -4,8 +4,8 @@ const { readFileSync } = require('fs');
 const tree = require('pretty-tree');
 const path = require('path');
 
-const process = (filename, {
-  hideContainers, moduleDir, hideThirdParty, formatted,
+const doIt = (filename, {
+  hideContainers, moduleDir, hideThirdParty, formatted, flatten,
 }) => {
   const rootNode = {
     name: path.basename(filename).replace(/\.jsx?/, ''),
@@ -61,7 +61,13 @@ const process = (filename, {
     if (child.source.startsWith('.')) {
       // Relative import (./ or ../)
       fileName = path.resolve(`${path.dirname(parent.filename)}/${child.source}`);
-      source = fileName.replace(`${process.cwd()}/`, '');
+      let basePath;
+      if (moduleDir) {
+        basePath = `${process.cwd()}/${moduleDir.replace('./', '')}/`;
+      } else {
+        basePath = `${process.cwd()}/`;
+      }
+      source = fileName.replace(basePath, '');
     } else {
       fileName = path.join(path.dirname(parent.filename), child.source);
       source = child.source;
@@ -209,6 +215,19 @@ const process = (filename, {
     return newNode;
   }
 
+  function flattenDeep(node) {
+    return node.children.reduce((acc, child) => {
+      if (child.hide) {
+        return acc;
+      }
+      acc.push(child.source);
+      if (child.children.length) {
+        return acc.concat(flattenDeep(child));
+      }
+      return acc;
+    }, []);
+  }
+
   function done() {
     if (!rootNode.children) {
       console.error(
@@ -219,10 +238,12 @@ const process = (filename, {
 
     if (formatted) {
       console.log(tree(formatNodeToPrettyTree(rootNode)));
-    } else {
-      return rootNode;
+      return process.exit();
     }
-    process.exit();
+    if (flatten) {
+      return flattenDeep(rootNode);
+    }
+    return rootNode;
   }
 
   // Get a list of names to try to resolve
@@ -271,4 +292,4 @@ const process = (filename, {
   return done();
 };
 
-module.exports = { process };
+module.exports = { doIt };
